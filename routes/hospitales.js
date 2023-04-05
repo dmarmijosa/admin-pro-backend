@@ -22,12 +22,19 @@ router.post(
   [
     validarJwt,
     check("nombre", "El nombre del hospital es obligatorio.").notEmpty(),
-    check("hospital", "EL hospital id debe ser válido").isMongoId(),
     validarCampos,
   ],
   postHospitales
 );
-router.put("/:id", [], putHospitales);
+router.put(
+  "/:id",
+  [
+    validarJwt,
+    check("nombre", "El nombre del hospital es obligatorio.").notEmpty(),
+    validarCampos,
+  ],
+  putHospitales
+);
 router.delete("/:id", validarJwt, deleteHospitales);
 
 module.exports = router;

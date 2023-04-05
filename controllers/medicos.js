@@ -31,18 +31,71 @@ const postMedicos = async (req = request, res = response) => {
   }
 };
 
-const putMedicos = (req = request, res = response) => {
-  res.json({
-    ok: true,
-    msg: "Put Medicos",
-  });
+const putMedicos = async (req = request, res = response) => {
+  const id = req.params.id;
+  const uid = req.uid;
+
+  try {
+    const medico = await Medicos.findById(id);
+    if (!medico) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No existe el medico en la base de datos",
+      });
+    }
+
+    const cambiosMedico = {
+      ...req.body,
+      usuario: uid,
+    };
+
+    const medicoActualizado = await Medicos.findByIdAndUpdate(
+      id,
+      cambiosMedico,
+      { new: true }
+    );
+
+    //hospital.nombre = req.body.nombre;
+
+    res.json({
+      ok: true,
+      hospital: medicoActualizado,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      ok: false,
+      msg: "Ocurrio un error al momento de actualizar el hospital",
+    });
+  }
 };
 
-const deleteMedicos = (req = request, res = response) => {
-  res.json({
-    ok: true,
-    msg: "Delete Medicos",
-  });
+const deleteMedicos = async (req = request, res = response) => {
+  const id = req.params.id;
+  try {
+    const medico = await Medicos.findById(id);
+    if (!medico) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No existe el medico en la base de datos",
+      });
+    }
+
+    await Medicos.findByIdAndDelete(id);
+
+    res.json({
+      ok: true,
+      msg:"Medico borrado"
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      ok: false,
+      msg: "Ocurrio un error al momento de actualizar el hospital",
+    });
+  }
 };
 
 module.exports = {
