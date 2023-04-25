@@ -3,6 +3,7 @@ const Usuario = require("../models/usuarios");
 const bcrypt = require("bcryptjs");
 const { generarJWT } = require("../helpers/jwt");
 const { googleVerify } = require("../helpers/google-verify");
+const { getMenuFronEnd } = require("../helpers/menu_frontend");
 const login = async (req, res = response) => {
   const { email, password } = req.body;
   try {
@@ -27,6 +28,7 @@ const login = async (req, res = response) => {
     res.json({
       ok: true,
       token,
+      menu: getMenuFronEnd(usuarioDB.role),
     });
   } catch (error) {
     console.error(error);
@@ -37,52 +39,51 @@ const login = async (req, res = response) => {
   }
 };
 
-const googleSignIn = async( req, res = response ) => {
-
+const googleSignIn = async (req, res = response) => {
   try {
-      const { email, name, picture } = await googleVerify( req.body.token );
+    const { email, name, picture } = await googleVerify(req.body.token);
 
-      const usuarioDB = await Usuario.findOne({ email });
-      let usuario;
+    const usuarioDB = await Usuario.findOne({ email });
+    let usuario;
 
-      if ( !usuarioDB ) {
-          usuario = new Usuario({
-              nombre: name,
-              email,
-              password: '@@@',
-              img: picture,
-              google: true
-          })
-      } else {
-          usuario = usuarioDB;
-          usuario.google = true;
-          // usuario.password = '@@';
-      }
-
-      // Guardar Usuario
-      await usuario.save();
-
-      // Generar el TOKEN - JWT
-      const token = await generarJWT( usuario.id );
-
-
-      res.json({
-          ok: true,
-          email, name, picture,
-          token
+    if (!usuarioDB) {
+      usuario = new Usuario({
+        nombre: name,
+        email,
+        password: "@@@",
+        img: picture,
+        google: true,
       });
-      
+    } else {
+      usuario = usuarioDB;
+      usuario.google = true;
+      // usuario.password = '@@';
+    }
+
+    // Guardar Usuario
+    await usuario.save();
+
+    // Generar el TOKEN - JWT
+    const token = await generarJWT(usuario.id);
+
+    res.json({
+      ok: true,
+      email,
+      name,
+      picture,
+      token,
+      menu: getMenuFronEnd(usuario.role),
+    });
   } catch (error) {
-      console.log(error);
-      res.status(400).json({
-          ok: false,
-          msg: 'Token de Google no es correcto'
-      });
+    console.log(error);
+    res.status(400).json({
+      ok: false,
+      msg: "Token de Google no es correcto",
+    });
   }
 };
 
-const renewToken = async (req,res= response)=>{
-
+const renewToken = async (req, res = response) => {
   const uid = req.uid;
 
   //Generear un nuevo token;
@@ -90,16 +91,14 @@ const renewToken = async (req,res= response)=>{
   //obtener el ususario por uid
   const usuario = await Usuario.findById(uid);
   res.json({
-    ok:true,
+    ok: true,
     token,
-    usuario
-    
-
-  })
-}
+    usuario,
+    menu: getMenuFronEnd(usuario.role),
+  });
+};
 module.exports = {
   login,
   googleSignIn,
-  renewToken
-
+  renewToken,
 };
